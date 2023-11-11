@@ -107,6 +107,15 @@ func (w *Websocket) subscriber(ctx context.Context) {
 				w.priceStream <- args
 			})
 			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case _, ok := <-w.done:
+					if !ok {
+						return
+					}
+				default:
+				}
 				logger.Of(ctx).Errorf("REGISTER HANDLER ERROR: %+v", err)
 				w.retry <- struct{}{}
 				return
